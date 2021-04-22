@@ -1,44 +1,40 @@
 class BrainFuck
   @code : String
   @code_ptr : Int32
-  @code_len : Int32
   @buff : Array(Int32)
   @buff_ptr : Int32
   @code_ptr_stack : Array(Int32)
-  @goto_pairs : Hash(Int32, Int32)
+  @clause_pairs : Hash(Int32, Int32)
 
   def initialize(source : String)
-    @code = parse(source)
+    @code = strip(source)
     @code_ptr = 0
-    @code_len = @code.size
     @buff = Array.new(30000, 0)
     @buff_ptr = 0
     @code_ptr_stack = [] of Int32
-    @goto_pairs = pairs
+    @clause_pairs = clause_pairs
   end
 
   def execute
-    until @code_ptr >= @code_len
+    until @code_ptr >= @code.size
       step
     end
   end
 
-  private def parse(source : String) : String
+  private def strip(source : String)
     source.gsub(/[^+-><.,\[\]]+/, "")
   end
 
-  private def pairs
+  private def clause_pairs
     stack = [] of Int32
     res = {} of Int32 => Int32
 
-    @code_len.times do |i|
-      op = @code[i]
-      
-      case op
+    @code.size.times do |index|
+      case @code[index]
       when '['
-        stack.push(i)
+        stack.push(index)
       when ']'
-        res[stack.pop] = i
+        res[stack.pop] = index
       end
     end
 
@@ -46,9 +42,7 @@ class BrainFuck
   end
 
   private def step
-    op = @code[@code_ptr]
-    
-    case op
+    case @code[@code_ptr]
     when '+'
       buff_incr
     when '-'
@@ -96,7 +90,7 @@ class BrainFuck
 
   private def goto_loopend
     if @buff[@buff_ptr] == 0
-      @code_ptr = @goto_pairs[@code_ptr]
+      @code_ptr = @clause_pairs[@code_ptr]
     else
       @code_ptr_stack.push(@code_ptr)
     end
